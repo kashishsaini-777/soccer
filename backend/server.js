@@ -1,48 +1,39 @@
 // backend/server.js
+require('dotenv').config();
 const express = require('express');
-const fetch = require('node-fetch');
+const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fetch(...args));
 const cors = require('cors');
 
 const app = express();
 app.use(cors());
 
-const RAPID_API_KEY = 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'; ; // ⬅️ Replace with your key
-const API_URL = 'https://api-football-v1.p.rapidapi.com/v3/fixtures?next=10';
-
 app.get('/api/matches', async (req, res) => {
   try {
-    const response = await fetch(API_URL, {
+    const response = await fetch('https://api.football-data.org/v4/matches', {
       method: 'GET',
       headers: {
-        'X-RapidAPI-Key': RAPID_API_KEY,
-        'X-RapidAPI-Host': 'api-football-v1.p.rapidapi.com',
-      },
+        'X-Auth-Token': process.env.API_KEY  // Your Football-Data.org API key
+      }
     });
 
     const data = await response.json();
 
-      if (!response.ok) {
-      console.error('API Error:', data);
-      return res.status(500).json({ error: 'API call failed', details: data });
-    }
-    
-    if (!data || !data.response) {
-      return res.status(500).json({ error: 'Invalid API response' });
+    if (!data.matches) {
+      return res.status(500).json({ error: 'Invalid response from Football-Data.org' });
     }
 
-    const matches = data.response.map((match) => ({
-      teams: `${match.teams.home.name} vs ${match.teams.away.name}`,
-      date: match.fixture.date,
+    const matches = data.matches.map(match => ({
+      homeTeam: match.homeTeam.name,
+      awayTeam: match.awayTeam.name,
+      date: match.utcDate
     }));
 
     res.json(matches);
-  } catch (error) {
-    console.error('Fetch error:', error.message);
+  } catch (err) {
+    console.error(err);
     res.status(500).json({ error: 'Failed to fetch matches' });
   }
 });
 
 const PORT = 3001;
-app.listen(PORT, () => {
-  console.log(`✅ Backend running at http://localhost:${PORT}/api/matches`);
-});
+app.listen(PORT, () => console.log(`✅ Backend running at http://localhost:${PORT}`));
