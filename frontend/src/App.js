@@ -35,7 +35,7 @@ function App() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
       >
-        <h1>⚽ Soccer Match Center</h1>
+        <h1>⚽ LIVE SOCCER MATCH</h1>
         <p>Live and upcoming fixtures</p>
       </motion.header>
 
